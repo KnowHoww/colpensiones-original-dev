@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use MicrosoftAzure\Storage\Blob\BlobRestProxy;
 use League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter;
 use League\Flysystem\Filesystem;
-
+use Illuminate\Support\Facades\URL;
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -17,6 +17,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (env('APP_ENV') !== 'local') {
+            URL::forceScheme('https');
+        }
         // Registramos el driver 'azure-blob'
         Storage::extend('azure-blob', function ($app, $config) {
 
