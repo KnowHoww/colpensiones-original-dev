@@ -57,7 +57,7 @@ use Illuminate\Support\Str;
 // use Smalot\PdfParser\Parser;
 use App\Models\Documento; 
 
-
+use App\Services\AzureBlobService;
 
 
 class InvestigacionesController extends Controller
@@ -1212,7 +1212,17 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $paths = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $azureService = new AzureBlobService();
+
+            $documentos = [];
+
+            foreach ($paths as $path) {
+                $documentos[] = [
+                    'nombre' => basename($path),
+                    'ruta' => $path
+                ];
+            }
             $coordinador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->CoordinadorRegional)->first();
             $investigador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->Investigador)->first();
             $auxiliar = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->Auxiliar)->first();
@@ -1455,7 +1465,17 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $paths = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $azureService = new AzureBlobService();
+
+            $documentos = [];
+
+            foreach ($paths as $path) {
+                $documentos[] = [
+                    'nombre' => basename($path),
+                    'ruta' => $path
+                ];
+            }
             $coordinador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->CoordinadorRegional)->first();
             $investigador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->Investigador)->first();
             $auxiliar = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->Auxiliar)->first();
@@ -2378,7 +2398,17 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $paths = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $azureService = new AzureBlobService();
+
+            $documentos = [];
+
+            foreach ($paths as $path) {
+                $documentos[] = [
+                    'nombre' => basename($path),
+                    'ruta' => $path
+                ];
+            }
             $creador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $investigacion->analista)->first();
             $aprobador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $investigacion->aprobador)->first();
             $TipoJuntas = Juntas::all();

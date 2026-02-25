@@ -16,6 +16,7 @@
         "laravelcollective/html": "^6.4",
         "league/flysystem-azure-blob-storage": "3.0.5",
         "maatwebsite/excel": "^3.1",
+        "microsoft/azure-storage-blob": "^1.5",
         "mpdf/mpdf": "^8.2",
         "spatie/laravel-permission": "^6.3",
         "twbs/bootstrap-icons": "^1.11",

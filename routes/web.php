@@ -241,7 +241,9 @@ Route::group(['middleware' => 'checkRules'], function () {
       
 
 
-
+    Route::get('/radicado/{carpeta}/{archivo}', [DocumentosController::class, 'ver'])
+    ->where('archivo', '.*')
+    ->name('documento.ver');
     Route::get('/generarDocumentacion', function () {
         return view('generarDocumentacion.generarDocumentacion');
     })->name('mostrarVista')->middleware(['auth']);;

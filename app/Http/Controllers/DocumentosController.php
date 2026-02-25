@@ -204,4 +204,35 @@ class DocumentosController extends Controller
         // Redirigir o hacer cualquier otra cosa después de eliminar el archivo
         return redirect()->back()->with('success', 'El archivo ha sido eliminado correctamente');
     }
+    public function ver($carpeta, $archivo)
+    {
+        $archivoCodificado = rawurlencode($archivo);
+        $ruta = "radicado/{$carpeta}/{$archivoCodificado}";
+
+        $azureService = new \App\Services\AzureBlobService();
+        $urlTemporal = $azureService->generarUrlTemporal($ruta);
+
+        // Detectar tipo por extensión
+        $extension = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));
+
+        $tipos = [
+            'png'  => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'pdf'  => 'application/pdf',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+        ];
+
+        $contentType = $tipos[$extension] ?? 'application/octet-stream';
+
+        return response()->stream(function () use ($urlTemporal) {
+            $stream = fopen($urlTemporal, 'r');
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'inline; filename="'.$archivo.'"',
+        ]);
+    }
 }
