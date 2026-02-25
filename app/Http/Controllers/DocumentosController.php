@@ -18,7 +18,7 @@ class DocumentosController extends Controller
      */
     public function index()
     {
-        return Storage::disk('radicados')->allDirectories();
+        return Storage::disk('azure')->allDirectories();
     }
 
     /**
@@ -60,7 +60,7 @@ class DocumentosController extends Controller
             if ($request->hasFile('firma')) {
                 $file = $request->file('firma') ;
                 $nombreArchivo = trim($this->getGUID(), '{}') . '.jpg';
-                Storage::disk('firmas')->putFileAs('/' , $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('/' , $file, $nombreArchivo);
                 $user->firma =  $nombreArchivo;
                 $user->update(['firma' => $nombreArchivo ]);
                 
@@ -73,7 +73,7 @@ class DocumentosController extends Controller
             foreach ($request->file('files') as $file) {
                 $nombreArchivo = $file->getClientOriginalName();
                 $extension = $file->getClientOriginalExtension();
-                Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/investigacion', $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/investigacion', $file, $nombreArchivo);
                 $consecutivo++;
             }
         }
@@ -84,14 +84,14 @@ class DocumentosController extends Controller
     {
         //$investigacion = Investigaciones::where('NumeroRadicacionCaso', $request->id)->first();
         $investigacion = Investigaciones::find($request->id);
-        $num_total = count(Storage::disk('investigaciones')->allFiles('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico'));
+        $num_total = count(Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico'));
         $consecutivo = $num_total;
 
         if ($request->hasFile('inmuebles') && $request->file('inmuebles') !== null) {
             foreach ($request->file('inmuebles') as $file) {
                 $extension = $file->getClientOriginalExtension();
                 $nombreArchivo = 'inmueble_' . ++$num_total . '.' . $extension;
-                Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
                 $consecutivo++;
             }
         }
@@ -100,7 +100,7 @@ class DocumentosController extends Controller
             foreach ($request->file('servicios') as $file) {
                 $extension = $file->getClientOriginalExtension();
                 $nombreArchivo = 'servicios_' . ++$num_total . '.' . $extension;
-                Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
                 $consecutivo++;
             }
         }
@@ -109,7 +109,7 @@ class DocumentosController extends Controller
             foreach ($request->file('pertenencias') as $file) {
                 $extension = $file->getClientOriginalExtension();
                 $nombreArchivo = 'pertenencias_' . ++$num_total . '.' . $extension;
-                Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
                 $consecutivo++;
             }
         }
@@ -118,7 +118,7 @@ class DocumentosController extends Controller
             foreach ($request->file('clinica') as $file) {
                 $extension = $file->getClientOriginalExtension();
                 $nombreArchivo = 'clinica_' . ++$num_total . '.' . $extension;
-                Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
                 $consecutivo++;
             }
         }
@@ -127,7 +127,7 @@ class DocumentosController extends Controller
             foreach ($request->file('familiares') as $file) {
                 $extension = $file->getClientOriginalExtension();
                 $nombreArchivo = 'familiares_' . ++$num_total . '.' . $extension;
-                Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
                 $consecutivo++;
             }
         }
@@ -136,7 +136,7 @@ class DocumentosController extends Controller
             foreach ($request->file('investigador') as $file) {
                 $extension = $file->getClientOriginalExtension();
                 $nombreArchivo = 'investigador_' . ++$num_total . '.' . $extension;
-                Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
                 $consecutivo++;
             }
         }
@@ -145,7 +145,7 @@ class DocumentosController extends Controller
             foreach ($request->file('basesdedatos') as $file) {
                 $extension = $file->getClientOriginalExtension();
                 $nombreArchivo = 'basesdedatos_' . ++$num_total . '.' . $extension;
-                Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
+                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
                 $consecutivo++;
             }
         }
@@ -184,8 +184,8 @@ class DocumentosController extends Controller
     {
         $rutaArchivo = $request->input('ruta_archivo');
         try {
-            if (Storage::disk('investigaciones')->exists($rutaArchivo)) {
-                $deleted = Storage::disk('investigaciones')->delete($rutaArchivo);
+            if (Storage::disk('azure')->exists($rutaArchivo)) {
+                $deleted = Storage::disk('azure')->delete($rutaArchivo);
 
                 if ($deleted) {
                     return redirect()->back()->with('success', 'El archivo ha sido eliminado correctamente');

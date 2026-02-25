@@ -254,12 +254,12 @@ class PDFController extends Controller
         $investigacion = Investigaciones::find($id);
         $fechaFormateada = date('Ymd', strtotime($investigacion->FechaFinalizacion));
         $nombreArchivo = 'GRP-IAD-PR-' . $investigacion->CasoPadreOriginal . '_' . $fechaFormateada . '_' . $investigacion->TipoDocumento . '_' . $investigacion->NumeroDeDocumento . '_' . $investigacion->id . '_0.pdf';
-        $documentos = Storage::disk('investigaciones')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
+        $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
         $pdf = PDF::loadView('informes.informeSoportesPDF', compact('documentos', 'nombreArchivo'));
 
         $pdf->setPaper('letter', 'portrait')->render();
 
-        $ruta = 'investigaciones/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico/';
+        $ruta = 'investigaciones/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico';
 
         if (!Storage::exists($ruta)) {
             Storage::makeDirectory($ruta);
@@ -300,7 +300,7 @@ class PDFController extends Controller
         $nombre = 'GRP-INF-AD-' . $investigacion->NumeroRadicacionCaso . '_' . date('Ymd') . '_' . $investigacion->TipoDocumento . '_' . $investigacion->NumeroDeDocumento . '_' . $investigacion->id . '.pdf';
         $fechaFormateada = date('Ymd', strtotime($investigacion->FechaFinalizacion));
         $nombreArchivo = 'GRP-IAD-PR-' . $investigacion->CasoPadreOriginal . '_' . $fechaFormateada . '_' . $investigacion->TipoDocumento . '_' . $investigacion->NumeroDeDocumento . '_' . $investigacion->id . '_0.pdf';
-        $documentos = Storage::disk('investigaciones')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
+        $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
         $pdf = PDF::loadView('informes.informeSoportesPDF', compact('documentos', 'nombreArchivo'));
 
         return $pdf->stream($nombre);
@@ -415,7 +415,7 @@ class PDFController extends Controller
         $investigacion = Investigaciones::find($id);
         $fechaFormateada = date('Ymd', strtotime($investigacion->FechaFinalizacion));
         $nombreArchivo = 'GRP-IAD-PR-' . $investigacion->CasoPadreOriginal . '_' . $fechaFormateada . '_' . $investigacion->TipoDocumento . '_' . $investigacion->NumeroDeDocumento . '_' . $investigacion->id .'_'.$contadorSoportes. '.pdf';
-        $documentos = Storage::disk('investigaciones')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
+        $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
         $pdf = PDF::loadView('informes.informeSoportesPDF', compact('documentos', 'nombreArchivo'));
 
         $pdf->setPaper('letter', 'portrait')->render();

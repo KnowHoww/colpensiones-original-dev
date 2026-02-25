@@ -133,10 +133,10 @@ class InvestigacionesRadicacionController extends Controller
 				$invest = Investigaciones::where ('id' , $investigacion->id)->first();
 				$fileOut = $fileOut . $invest->nombreCarpeta . ':';
 				if ($invest->estado == 7 ){
-					$documentos = Storage::disk('investigaciones')->allFiles('finalizados/' . $invest->nombreCarpeta);
+					$documentos = Storage::disk('azure')->allFiles('finalizados/' . $invest->nombreCarpeta);
 				}
 				else {
-					$documentos = Storage::disk('investigaciones')->allFiles('finalizadosObjetados/' . $invest->nombreCarpeta);
+					$documentos = Storage::disk('azure')->allFiles('finalizadosObjetados/' . $invest->nombreCarpeta);
 				}
 				foreach ($documentos as $file) {
 					$fileOut = $fileOut . $file  . '//';

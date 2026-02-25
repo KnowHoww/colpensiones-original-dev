@@ -274,7 +274,7 @@ class InvestigacionesController extends Controller
                 if ($request->hasFile('files')) {
                     foreach ($request->file('files') as $file) {
                         $nombreArchivo = $file->getClientOriginalName();
-                        Storage::disk('investigaciones')->putFileAs('/radicado/' . $nombreCarpeta, $file, $nombreArchivo);
+                        Storage::disk('azure')->putFileAs('radicado/' . $nombreCarpeta, $file, $nombreArchivo);
                     }
                 }
                 DB::commit();
@@ -1212,7 +1212,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $documentos = Storage::disk('investigaciones')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
             $coordinador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->CoordinadorRegional)->first();
             $investigador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->Investigador)->first();
             $auxiliar = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->Auxiliar)->first();
@@ -1253,7 +1253,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 ->orderBy('fecha', 'asc')
                 ->get();
             //$RadicadoAsociado = Investigaciones::where('NumeroRadicacionCaso',$investigacion->RadicadoAsociado)->first();
-            Storage::disk('investigaciones')->makeDirectory('/radicado/' . $investigacion->nombreCarpeta . '/investigacion/');
+            Storage::disk('azure')->makeDirectory('radicado/' . $investigacion->nombreCarpeta . '/investigacion');
             
             $facturaAuxilios = [
                 ['id' => '1',    'name' => 'Factura de Gastos Funerarios'],
@@ -1455,7 +1455,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $documentos = Storage::disk('investigaciones')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
             $coordinador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->CoordinadorRegional)->first();
             $investigador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->Investigador)->first();
             $auxiliar = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $asignacion->Auxiliar)->first();
@@ -1740,16 +1740,16 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
     {
         $investigacion = Investigaciones::find($id);
         if ($estado == 7) {
-            Storage::disk('investigaciones')->makeDirectory('/finalizados/' . $investigacion->CasoPadreOriginal . '_' . $investigacion->id);
+            Storage::disk('azure')->makeDirectory('finalizados/' . $investigacion->CasoPadreOriginal . '_' . $investigacion->id);
             Log::channel('stderr')->info('CreateDirectory');
         }
-        $rutaDirectorio = '/finalizados/' ;
+        $rutaDirectorio = 'finalizados/' ;
         switch ($estado) {
             case '7':
-                $rutaDirectorio = '/finalizados/' ;
+                $rutaDirectorio = 'finalizados/' ;
                 break;
             case '16':
-                $rutaDirectorio = '/finalizadosObjetados/' ;
+                $rutaDirectorio = 'finalizadosObjetados/' ;
                 break;
         }
         $objetado ='';
@@ -1758,8 +1758,8 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 $objetado = '_' . strval($investigacion->cantidadObjeciones);
                 Log::channel('stderr')->info('Cantidad de Objeciones:' . $objetado);
         }
-        $archivosInvestigacion = Storage::disk('investigaciones')->allFiles('/radicado/' . $investigacion->nombreCarpeta . '/investigacion');
-        $archivosSoporteFotografico = Storage::disk('investigaciones')->allFiles('/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
+        $archivosInvestigacion = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/investigacion');
+        $archivosSoporteFotografico = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
         $archivos = array_merge($archivosInvestigacion, $archivosSoporteFotografico);
         $consecutivo = 1;
         foreach ($archivos as $archivo) {
@@ -1772,7 +1772,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 $extension = pathinfo($nombre_archivo, PATHINFO_EXTENSION);
                 if ($estado == 7 || $estado == 16 ) {
                     $nombreArchivo = 'GRP-IAD-PR-' . $investigacion->CasoPadreOriginal . '_' . date('Ymd') . '_' . $investigacion->TipoDocumento . '_' . $investigacion->NumeroDeDocumento . '_' . $investigacion->id . $objetado  . '_'. $consecutivo . '.' . $extension;
-                    if (Storage::disk('investigaciones')->copy($archivo, $rutaDirectorio . $investigacion->CasoPadreOriginal . '_' . $investigacion->id . '/' . $nombreArchivo)) {
+                    if (Storage::disk('azure')->copy($archivo, $rutaDirectorio . $investigacion->CasoPadreOriginal . '_' . $investigacion->id . '/' . $nombreArchivo)) {
                         $consecutivo++;
                     }
                 }
@@ -2092,7 +2092,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 foreach ($request->file('files') as $file) {
                     $nombreArchivo = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
-                    Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta, $file, $nombreArchivo);
+                    Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta, $file, $nombreArchivo);
                 }
             }
         } else {
@@ -2100,7 +2100,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 foreach ($request->file('files') as $file) {
                     $nombreArchivo = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
-                    Storage::disk('investigaciones')->putFileAs('/radicado/' . $investigacion->nombreCarpeta . '/investigacion', $file, $nombreArchivo);
+                    Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/investigacion', $file, $nombreArchivo);
                 }
             }
         }
@@ -2153,7 +2153,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             $tipoDocumento = TipoDocumento::all();
             $investigacion = Investigaciones::find($id);
             $Historial = Investigaciones::where('TipoDocumento', $investigacion->TipoDocumento)->where('NumeroDeDocumento', $investigacion->NumeroDeDocumento)->get();
-            Storage::disk('investigaciones')->makeDirectory('/radicado/' . $investigacion->nombreCarpeta . '/investigacion/');
+            Storage::disk('azure')->makeDirectory('radicado/' . $investigacion->nombreCarpeta . '/investigacion');
             // Obtener datos necesarios para la vista
             $facturaAuxilios = [
                 [
@@ -2378,7 +2378,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $documentos = Storage::disk('investigaciones')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $documentos = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
             $creador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $investigacion->analista)->first();
             $aprobador = User::selectRaw('id, CONCAT(users.name, " ", users.lastname) as full_name')->where('id', $investigacion->aprobador)->first();
             $TipoJuntas = Juntas::all();
