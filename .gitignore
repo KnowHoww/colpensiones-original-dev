@@ -2,7 +2,7 @@
 /storage/*
 
 # Carpeta de caché generada por Laravel
-/bootstrap/cache/*
+#/bootstrap/cache/*
 
 # Archivos de registro generados por Laravel
 /storage/logs/*
@@ -38,7 +38,7 @@ npm-debug.log
 /.vagrant
 /_ide_helper.php
 /_ide_helper_models.php
-artisan
+#artisan
 .DS_Store
 public/*.csv
 public/*.txt
