@@ -35,8 +35,9 @@ jobs:
           chmod -R 775 bootstrap/cache storage
           
           # Crear un .env temporal para que Artisan no falle durante el build
-          echo "APP_ENV=production" > .env
-          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
+          if [ ! -f .env ]; then
+            cp .env.example .env || echo "APP_KEY=base64:$(openssl rand -base64 32)" > .env
+          fi
 
       - name: Validate composer.json
         run: composer validate --no-check-publish
@@ -44,11 +45,10 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
         env:
-          # Forzamos estas variables para el proceso de post-autoload-dump
           APP_ENV: production
 
       - name: Upload artifact for deployment job
-        uses: azure/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: php-app
           path: .
@@ -58,7 +58,7 @@ jobs:
     needs: build
     steps:
       - name: Download artifact from build job
-        uses: azure/download-artifact@v4
+        uses: actions/download-artifact@v4
         with:
           name: php-app
 
