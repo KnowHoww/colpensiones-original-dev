@@ -24,10 +24,11 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, bcmath, pdo_mysql, tokenizer, xml, ctype, fileinfo
           coverage: none
+          
       - name: Prepare Laravel Cache
         run: |
           mkdir -p bootstrap/cache
-          chmod -R 775 bootstrap/cache
+          chmod -R 777 bootstrap/cache
           
       - name: Validate composer.json
         run: composer validate --no-check-publish
@@ -61,5 +62,6 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D1C0379C0C864B88BC9433D26DCD75B1 }}
+
 
 
