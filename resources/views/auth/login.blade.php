@@ -38,7 +38,15 @@
                                     <div class="text-center">
                                         <a href="{{ route('password.request') }}">He olvidado mi contraseña</a>
                                         <br>
-                                        <small>2024 | Todos los derechos reservados</small>
+                                        <small>
+                                            <span id="year"></span> | Todos los derechos reservados
+                                        </small>
+
+                                        <script>
+                                        // Obtener el año actual
+                                        const currentYear = new Date().getFullYear();
+                                        document.getElementById('year').textContent = currentYear;
+                                        </script>
                                     </div>
                                 </form>
                             </div>
