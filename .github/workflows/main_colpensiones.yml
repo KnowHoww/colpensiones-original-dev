@@ -22,22 +22,33 @@ jobs:
           extensions: mbstring, bcmath, pdo_mysql, tokenizer, xml, ctype, fileinfo
           coverage: none
 
-      - name: Prepare Laravel Cache
+      - name: Prepare Laravel Directories
         run: |
+          # Crear todas las carpetas que Laravel necesita para funcionar
           mkdir -p bootstrap/cache
-          chmod -R 777 bootstrap/cache
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          
+          # Dar permisos de escritura
+          chmod -R 775 bootstrap/cache storage
+          
+          # Crear un .env temporal para que Artisan no falle durante el build
+          echo "APP_ENV=production" > .env
+          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
 
       - name: Validate composer.json
         run: composer validate --no-check-publish
 
-      - name: Clear Composer Cache
-        run: composer clear-cache
-
       - name: Install Dependencies
-        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
+        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
+        env:
+          # Forzamos estas variables para el proceso de post-autoload-dump
+          APP_ENV: production
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+        uses: azure/upload-artifact@v4
         with:
           name: php-app
           path: .
@@ -45,17 +56,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+        uses: azure/download-artifact@v4
         with:
           name: php-app
-
-      - name: Ensure Laravel Cache Path
-        run: |
-          mkdir -p bootstrap/cache
-          chmod -R 777 bootstrap/cache
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
