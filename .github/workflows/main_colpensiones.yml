@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -21,18 +21,18 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
-
-      - name: Check if composer.json exists
-        id: check_files
-        uses: andstor/file-existence-action@v1
-        with:
-          files: 'composer.json'
-
-      - name: Run composer install if composer.json exists
-        if: steps.check_files.outputs.files_exists == 'true'
-        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
-
+          php-version: '8.1'
+          extensions: mbstring, bcmath, pdo_mysql, tokenizer, xml, ctype, fileinfo
+          coverage: none
+      
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+      
+      - name: Clear Composer Cache
+        run: composer clear-cache
+      
+      - name: Install Dependencies
+        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -50,9 +50,8 @@ jobs:
         with:
           name: php-app
       
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
           app-name: 'colpensiones'
           slot-name: 'Production'
