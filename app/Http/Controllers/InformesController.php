@@ -10,6 +10,7 @@ use App\Models\Servicios;
 use App\Models\States;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class InformesController extends Controller
 {
@@ -62,7 +63,7 @@ class InformesController extends Controller
         return $data = $data->groupBy('investigaciones.id')->get();
     }
 
-public function informeInvestigacionFiltroExcel(Request $request)
+/*public function informeInvestigacionFiltroExcel(Request $request)
 {
     // Parámetros de emergencia (se mantienen igual)
     ini_set('memory_limit', '3072M');
@@ -72,14 +73,43 @@ public function informeInvestigacionFiltroExcel(Request $request)
     $nombre_archivo = 'informe_investigaciones_' . $fecha . '.xlsx';
     
     // 1. Guardar el archivo en el disco 'public' (Se mantiene igual)
-    Excel::store(new \App\Exports\InformeInvestigaciones($request), $nombre_archivo, 'public');
+    Excel::store(new \App\Exports\InformeInvestigaciones($request), $nombre_archivo, 'azure');
 
     // 2. MODIFICACIÓN: En lugar de retornar un JSON, retornamos la descarga directa
     // storage_path apunta a la ubicación física en el servidor
     $ruta_fisica = storage_path('app/public/' . $nombre_archivo);
 
     return response()->download($ruta_fisica)->deleteFileAfterSend(true);
-}
+}*/
+    public function informeInvestigacionFiltroExcel(Request $request)
+    {
+        // Parámetros de emergencia (se mantienen igual)
+        ini_set('memory_limit', '3072M');
+        set_time_limit(2400);
+
+        $fecha = now()->format('Y-m-d_His');
+        $nombre_archivo = 'informe_investigaciones_' . $fecha . '.xlsx';
+
+        // 1. Guardar el archivo en Azure
+        Excel::store(
+            new \App\Exports\InformeInvestigaciones($request),
+            $nombre_archivo,
+            'azure'
+        );
+
+        // 2. Verificar que exista en Azure
+        if (!Storage::disk('azure')->exists($nombre_archivo)) {
+            return abort(404, 'Archivo no encontrado en Azure');
+        }
+
+        // 3. Obtener contenido desde Azure
+        $contenido = Storage::disk('azure')->get($nombre_archivo);
+
+        // 4. Retornar descarga directa
+        return response($contenido)
+            ->header('Content-Type', Storage::disk('azure')->mimeType($nombre_archivo))
+            ->header('Content-Disposition', 'attachment; filename="'.$nombre_archivo.'"');
+    }
 
     public function informeInvestigacionFiltroExcelOperaciones(Request $request)
     {

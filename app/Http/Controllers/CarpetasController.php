@@ -17,28 +17,26 @@ class CarpetasController extends Controller
 
         $file = $request->file('file');
         $filename = $file->getClientOriginalName();
-        $tempPath = $file->storeAs('public/uploads', $filename); // Almacenar temporalmente en el disco público
 
-        // Asumimos que `nombreCarpeta` está relacionado con el `NumeroRadicacionCaso` en alguna forma.
         $numeroRadicadoCaso = pathinfo($filename, PATHINFO_FILENAME);
+
         $investigacion = Investigaciones::where('NumeroRadicacionCaso', $numeroRadicadoCaso)->first();
 
-        if ($investigacion) {
-            $nuevoNombreCarpeta = $investigacion->nombreCarpeta;
-            $nuevoDirectorio = "investigaciones/radicado/{$nuevoNombreCarpeta}";
-
-            // Crear la carpeta si no existe
-            if (!Storage::exists($nuevoDirectorio)) {
-                Storage::makeDirectory($nuevoDirectorio);
-            }
-
-            // Mover el archivo a la nueva carpeta
-            Storage::move($tempPath, "{$nuevoDirectorio}/{$filename}");
-        } else {
+        if (!$investigacion) {
             return response()->json(['error' => 'Investigación no encontrada'], 404);
         }
 
-        return response()->json(['success' => 'Archivo subido y movido correctamente']);
+        $nuevoNombreCarpeta = $investigacion->nombreCarpeta;
+
+        $rutaAzure = "investigaciones/radicado/{$nuevoNombreCarpeta}/{$filename}";
+
+        // Guardar directamente en Azure
+        Storage::put($rutaAzure, file_get_contents($file));
+
+        return response()->json([
+            'success' => 'Archivo subido correctamente a Azure',
+            'ruta' => $rutaAzure
+        ]);
     }
 
     // public function moverCarpetas()

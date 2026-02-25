@@ -5,6 +5,7 @@ return [
     'default' => 'azure',
 
     'disks' => [
+        
 
         'azure' => [
             'driver' => 'azure-blob',

@@ -137,7 +137,7 @@ class InvestigacionesController extends Controller
             ->leftJoin('users as investigador', 'investigador.id', '=', 'investigacion_asignacion.Investigador')
             ->leftJoin('users as analistaColpensiones', 'analistaColpensiones.id', '=', 'investigaciones.analista')
             ->leftJoin('users as aprobadorColpensiones', 'aprobadorColpensiones.id', '=', 'investigaciones.aprobador')
-			->leftJoin('colpensiones.investigaciones_beneficiarios', 'colpensiones.investigaciones_beneficiarios.IdInvestigacion', '=', 'investigaciones.id')
+			->leftJoin('investigaciones_beneficiarios', 'investigaciones_beneficiarios.IdInvestigacion', '=', 'investigaciones.id')
             ->where(function($query) use ($q) {
                 $query->where('estadoInvestigacion.name', 'like', "%$q%")
                     ->orWhere('investigaciones.id', 'like', "%$q%")
@@ -158,7 +158,7 @@ class InvestigacionesController extends Controller
                     ->orWhere('investigaciones.PrimerApellido', 'like', "%$q%")
                     ->orWhere('investigaciones.SegundoApellido', 'like', "%$q%")
                     ->orWhere('investigaciones.CasoPadreOriginal', 'like', "%$q%")
-                    ->orWhere('colpensiones.investigaciones_beneficiarios.NumeroDocumento', 'like', "%$q%");
+                    ->orWhere('investigaciones_beneficiarios.NumeroDocumento', 'like', "%$q%");
             })
             ->distinct('investigaciones.id')
 			->with(['estados', 'tipoInvestigaciones', 'tipoRiesgos', 'detalleRiesgos', 'tipoTramites', 'tipoSolicitudes', 'tipoSolicitantes', 'tipoPensiones', 'tipoDocumentos', 'prioridades'])
@@ -966,7 +966,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
         )
         ->leftJoin('users as analistaColpensiones', 'analistaColpensiones.id', '=', 'investigaciones.analista')
         ->leftJoin('users as aprobadorColpensiones', 'aprobadorColpensiones.id', '=', 'investigaciones.aprobador')
-        ->leftJoin('colpensiones.investigaciones_beneficiarios', 'colpensiones.investigaciones_beneficiarios.IdInvestigacion', '=', 'investigaciones.id')
+        ->leftJoin('investigaciones_beneficiarios', 'investigaciones_beneficiarios.IdInvestigacion', '=', 'investigaciones.id')
         ->orderBy('investigaciones.id', 'desc')
         ->where('investigaciones.CentroCosto', Auth::user()->centroCostos->codigo);
 
@@ -991,7 +991,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
               ->orWhere('investigaciones.Observacion', 'like', "%{$filtro}%")
               ->orWhere('investigaciones.NumeroDeDocumento', 'like', "%{$filtro}%")
               ->orWhere('investigaciones.IdCase', 'like', "%{$filtro}%")
-                ->orWhere('colpensiones.investigaciones_beneficiarios.NumeroDocumento', 'like',  "%{$filtro}%");
+                ->orWhere('investigaciones_beneficiarios.NumeroDocumento', 'like',  "%{$filtro}%");
             });
         }
 
