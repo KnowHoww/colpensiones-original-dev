@@ -24,18 +24,25 @@ class AzureBlobService
             $this->accountKey
         );
 
-        // 👇 Restamos 5 minutos para evitar desfase de reloj
+        // IMPORTANTE: Si la ruta ya viene con %20, rawurldecode la limpia 
+        // y rawurlencode la vuelve a poner bien una sola vez.
+        $limpia = rawurldecode($rutaArchivo);
+        
+        $rutaEncodeada = collect(explode('/', $limpia))
+            ->map(fn($parte) => rawurlencode($parte))
+            ->implode('/');
+
         $start = gmdate('Y-m-d\TH:i:s\Z', strtotime('-5 minutes'));
         $expiry = gmdate('Y-m-d\TH:i:s\Z', strtotime("+{$minutos} minutes"));
 
         $sasToken = $helper->generateBlobServiceSharedAccessSignatureToken(
             'b',
-            "{$this->container}/{$rutaArchivo}",
+            "{$this->container}/{$rutaEncodeada}",
             'r',
             $expiry,
             $start
         );
 
-        return "https://{$this->accountName}.blob.core.windows.net/{$this->container}/{$rutaArchivo}?{$sasToken}";
+        return "https://{$this->accountName}.blob.core.windows.net/{$this->container}/{$rutaEncodeada}?{$sasToken}";
     }
 }

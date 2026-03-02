@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('http');
         }
         // Registramos el driver 'azure-blob'
-        Storage::extend('azure-blob', function ($app, $config) {
+        Storage::extend('azure', function ($app, $config) {
 
             // Crear el cliente de Azure Blob Storage (BlobRestProxy)
             $client = BlobRestProxy::createBlobService($config['connection_string']);

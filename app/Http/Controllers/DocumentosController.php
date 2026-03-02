@@ -206,33 +206,48 @@ class DocumentosController extends Controller
     }
     public function ver($carpeta, $archivo)
     {
-        $archivoCodificado = rawurlencode($archivo);
-        $ruta = "radicado/{$carpeta}/{$archivoCodificado}";
+        // DEBUG 1: ¿Entra al controlador?
+        // Si ves esto en pantalla, la ruta en web.php está BIEN.
+        // Si sigues viendo el 404 de Laravel, la ruta en web.php está MAL.
+        // dd("Entró al controlador", "Carpeta: $carpeta", "Archivo: $archivo");
+
+        $ruta = "investigaciones/radicado/{$carpeta}/{$archivo}";
 
         $azureService = new \App\Services\AzureBlobService();
         $urlTemporal = $azureService->generarUrlTemporal($ruta);
 
-        // Detectar tipo por extensión
-        $extension = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));
+        // DEBUG 2: ¿La URL de Azure es válida?
+        // Copia y pega lo que salga aquí en una pestaña nueva. 
+        // Si abre el PDF, el problema es el fopen/stream.
+        // dd($urlTemporal);
 
+        $extension = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));
         $tipos = [
+            'pdf'  => 'application/pdf',
             'png'  => 'image/png',
             'jpg'  => 'image/jpeg',
             'jpeg' => 'image/jpeg',
-            'pdf'  => 'application/pdf',
-            'gif'  => 'image/gif',
-            'webp' => 'image/webp',
         ];
-
         $contentType = $tipos[$extension] ?? 'application/octet-stream';
 
         return response()->stream(function () use ($urlTemporal) {
-            $stream = fopen($urlTemporal, 'r');
-            fpassthru($stream);
-            fclose($stream);
+            $opts = ["http" => ["method" => "GET"]];
+            $context = stream_context_create($opts);
+            $file = @fopen($urlTemporal, 'rb', false, $context);
+            
+            if (!$file) {
+                // DEBUG 3: Si llega aquí pero no abre el archivo
+                exit("Error: No se pudo abrir el stream de Azure. Revisa allow_url_fopen en php.ini");
+            }
+
+            while (!feof($file)) {
+                echo fread($file, 1024 * 8);
+                flush();
+            }
+            fclose($file);
         }, 200, [
             'Content-Type' => $contentType,
-            'Content-Disposition' => 'inline; filename="'.$archivo.'"',
+            'Content-Disposition' => 'inline; filename="' . $archivo . '"',
         ]);
     }
 }

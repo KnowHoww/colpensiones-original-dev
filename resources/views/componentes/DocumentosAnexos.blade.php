@@ -30,7 +30,7 @@
                             $partes = explode('/', $ruta);
 
                             // radicado/9997_14/investigacion/archivo.pdf
-                            $carpeta = $partes[1];
+                            $carpeta = $partes[2];
                             $archivo = end($partes);
 
                             $puedeEliminar =
