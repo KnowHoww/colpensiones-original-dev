@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (env('APP_ENV') !== 'local') {
-            URL::forceScheme('http');
+            URL::forceScheme('https');
         }
         // Registramos el driver 'azure-blob'
         Storage::extend('azure', function ($app, $config) {
