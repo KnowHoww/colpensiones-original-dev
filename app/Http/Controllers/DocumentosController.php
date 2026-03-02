@@ -210,7 +210,8 @@ class DocumentosController extends Controller
         $ruta = "radicado/{$carpeta}/{$archivoCodificado}";
 
         $azureService = new \App\Services\AzureBlobService();
-        $urlTemporal = $azureService->generarUrlTemporal($ruta);
+        #$urlTemporal = $azureService->generarUrlTemporal($ruta);
+        $urlTemporal = $azureService->generarUrlTemporal($path);
 
         // Detectar tipo por extensión
         $extension = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));

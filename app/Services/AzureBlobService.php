@@ -32,7 +32,7 @@ class AzureBlobService
             'b',
             "{$this->container}/{$rutaArchivo}",
             'r',
-            $expiry,
+            $expiry,    
             $start
         );
 
