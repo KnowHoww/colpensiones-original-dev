@@ -41,7 +41,6 @@
                                         <small>
                                             <span id="year"></span> | Todos los derechos reservados
                                         </small>
-
                                         <script>
                                         // Obtener el año actual
                                         const currentYear = new Date().getFullYear();
