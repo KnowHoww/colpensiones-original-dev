@@ -274,7 +274,7 @@ class InvestigacionesController extends Controller
                 if ($request->hasFile('files')) {
                     foreach ($request->file('files') as $file) {
                         $nombreArchivo = $file->getClientOriginalName();
-                        Storage::disk('azure')->putFileAs('radicado/' . $nombreCarpeta, $file, $nombreArchivo);
+                        Storage::disk('azure')->putFileAs('investigaciones/radicado/' . $nombreCarpeta, $file, $nombreArchivo);
                     }
                 }
                 DB::commit();
@@ -1212,7 +1212,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $paths = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $paths = Storage::disk('azure')->allFiles('investigaciones/radicado/' . $investigacion->nombreCarpeta);
             $azureService = new AzureBlobService();
 
             $documentos = [];
@@ -1263,7 +1263,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 ->orderBy('fecha', 'asc')
                 ->get();
             //$RadicadoAsociado = Investigaciones::where('NumeroRadicacionCaso',$investigacion->RadicadoAsociado)->first();
-            Storage::disk('azure')->makeDirectory('radicado/' . $investigacion->nombreCarpeta . '/investigacion');
+            Storage::disk('azure')->makeDirectory('investigaciones/radicado/' . $investigacion->nombreCarpeta . '/investigacion');
             
             $facturaAuxilios = [
                 ['id' => '1',    'name' => 'Factura de Gastos Funerarios'],
@@ -1465,7 +1465,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $paths = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $paths = Storage::disk('azure')->allFiles('investigaciones/radicado/' . $investigacion->nombreCarpeta);
             $azureService = new AzureBlobService();
 
             $documentos = [];
@@ -1778,8 +1778,8 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 $objetado = '_' . strval($investigacion->cantidadObjeciones);
                 Log::channel('stderr')->info('Cantidad de Objeciones:' . $objetado);
         }
-        $archivosInvestigacion = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/investigacion');
-        $archivosSoporteFotografico = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
+        $archivosInvestigacion = Storage::disk('azure')->allFiles('investigaciones/radicado/' . $investigacion->nombreCarpeta . '/investigacion');
+        $archivosSoporteFotografico = Storage::disk('azure')->allFiles('investigaciones/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico');
         $archivos = array_merge($archivosInvestigacion, $archivosSoporteFotografico);
         $consecutivo = 1;
         foreach ($archivos as $archivo) {
@@ -2112,7 +2112,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 foreach ($request->file('files') as $file) {
                     $nombreArchivo = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
-                    Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta, $file, $nombreArchivo);
+                    Storage::disk('azure')->putFileAs('investigaciones/radicado/' . $investigacion->nombreCarpeta, $file, $nombreArchivo);
                 }
             }
         } else {
@@ -2120,7 +2120,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
                 foreach ($request->file('files') as $file) {
                     $nombreArchivo = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
-                    Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/investigacion', $file, $nombreArchivo);
+                    Storage::disk('azure')->putFileAs('investigaciones/radicado/' . $investigacion->nombreCarpeta . '/investigacion', $file, $nombreArchivo);
                 }
             }
         }
@@ -2173,7 +2173,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             $tipoDocumento = TipoDocumento::all();
             $investigacion = Investigaciones::find($id);
             $Historial = Investigaciones::where('TipoDocumento', $investigacion->TipoDocumento)->where('NumeroDeDocumento', $investigacion->NumeroDeDocumento)->get();
-            Storage::disk('azure')->makeDirectory('radicado/' . $investigacion->nombreCarpeta . '/investigacion');
+            Storage::disk('azure')->makeDirectory('investigaciones/radicado/' . $investigacion->nombreCarpeta . '/investigacion');
             // Obtener datos necesarios para la vista
             $facturaAuxilios = [
                 [
@@ -2398,7 +2398,7 @@ $investigaciones = $investigaciones->leftJoin('users as coordinador', 'coordinad
             }
             $antecedentesBeneficiarios = InvestigacionConsultasAntecedentesBeneficiarios::select('investigacion_consultas_antecedentes_beneficiarios.*', 'investigaciones_beneficiarios.NumeroDocumento', 'investigaciones_beneficiarios.PrimerNombre', 'investigaciones_beneficiarios.SegundoNombre', 'investigaciones_beneficiarios.PrimerApellido', 'investigaciones_beneficiarios.SegundoApellido')->where('investigacion_consultas_antecedentes_beneficiarios.idInvestigacion', $id)->join('investigaciones_beneficiarios', 'investigaciones_beneficiarios.id', 'investigacion_consultas_antecedentes_beneficiarios.idBeneficiario')->get();
             $asignacion = InvestigacionAsignacion::where('idInvestigacion', $id)->first();
-            $paths = Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta);
+            $paths = Storage::disk('azure')->allFiles('investigaciones/radicado/' . $investigacion->nombreCarpeta);
             $azureService = new AzureBlobService();
 
             $documentos = [];
