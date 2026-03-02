@@ -64,7 +64,7 @@ use App\Http\Controllers\AsignacionMasivaAnalistasController;
 |
 */
 // Cambiamos "investigaciones" por "ver-anexo" para evitar el choque con la carpeta física
-Route::get('/investigaciones/radicado/{carpeta}/{archivo}', [DocumentosController::class, 'ver'])
+Route::get('colpensiones/investigaciones/radicado/{carpeta}/{archivo}/ver', [DocumentosController::class, 'ver'])
     ->where('archivo', '.*')
     ->name('documento.ver');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
