@@ -46,7 +46,7 @@ use App\Models\Novedad;
 use FontLib\Table\Type\name;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\CarpetasController;
-use App\Http\Controllers\PDFINVESTIGController;
+#use App\Http\Controllers\PDFINVESTIGController;
 use App\Http\Controllers\generarDocumentacion;
 
 
@@ -63,7 +63,10 @@ use App\Http\Controllers\AsignacionMasivaAnalistasController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
+// Cambiamos "investigaciones" por "ver-anexo" para evitar el choque con la carpeta física
+Route::get('/investigaciones/radicado/{carpeta}/{archivo}', [DocumentosController::class, 'ver'])
+    ->where('archivo', '.*')
+    ->name('documento.ver');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 //Auth::routes();
 Route::get('/password/reset', [UserController::class, 'showLinkRequestForm'])->name('password.request');
@@ -184,14 +187,14 @@ Route::group(['middleware' => 'checkRules'], function () {
     Route::get('/validarCarpetas', [CarpetasController::class, 'validarCarpetas'])->name('validarCarpetas');
     Route::get('/masivoinvestigaciones',[ExcelController::class,'mostrarMasivo'])->name('masivoinvestigaciones');
     
-    Route::post('/pdf/upload-database', [PDFINVESTIGController::class, 'uploadToDatabase'])->name('pdf.upload_database');
+    #Route::post('/pdf/upload-database', [PDFINVESTIGController::class, 'uploadToDatabase'])->name('pdf.upload_database');
 
     Route::get('/pdf', function () {
         return view('pdf.index');
     })->name('pdf.index');
     
     
-    Route::post('/pdf/upload', [PDFINVESTIGController::class, 'upload'])->name('pdf.upload.handle');
+    #Route::post('/pdf/upload', [PDFINVESTIGController::class, 'upload'])->name('pdf.upload.handle');
 
 	Route::get('/radicacion/', [InvestigacionesRadicacionController::class, 'filtros'])->name('filtros')->middleware(['auth']);
     Route::get('/pendienteradicacion/', [InvestigacionesRadicacionController::class, 'buscarInvestigacionesRadicacion'])->name('pendienteradicacion')->middleware(['auth']);
@@ -241,9 +244,7 @@ Route::group(['middleware' => 'checkRules'], function () {
       
 
 
-    Route::get('/radicado/{carpeta}/{archivo}', [DocumentosController::class, 'ver'])
-    ->where('archivo', '.*')
-    ->name('documento.ver');
+    
     Route::get('/generarDocumentacion', function () {
         return view('generarDocumentacion.generarDocumentacion');
     })->name('mostrarVista')->middleware(['auth']);;
