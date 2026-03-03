@@ -10,244 +10,150 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-
 class DocumentosController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        return Storage::disk('azure')->allDirectories();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-    
+    // Función auxiliar para mantener compatibilidad con tus nombres de archivo de firma
     private function getGUID(){
         if (function_exists('com_create_guid')){
-            return com_create_guid();
+            return trim(com_create_guid(), '{}');
         }
         else {
-            mt_srand((double)microtime()*10000);//optional for php 4.2.0 and up.
+            mt_srand((double)microtime()*10000);
             $charid = strtoupper(md5(uniqid(rand(), true)));
-            $hyphen = chr(45);// "-"
-            $uuid = chr(123)// "{"
-                .substr($charid, 0, 8).$hyphen
+            $hyphen = chr(45);
+            $uuid = substr($charid, 0, 8).$hyphen
                 .substr($charid, 8, 4).$hyphen
                 .substr($charid,12, 4).$hyphen
                 .substr($charid,16, 4).$hyphen
-                .substr($charid,20,12)
-                .chr(125);// "}"
+                .substr($charid,20,12);
             return $uuid;
         }
     }
+
     /**
-     * Store a newly created resource in storage.
+     * Subida principal de documentos (Investigación y Firmas)
      */
     public function store(Request $request)
     {
-       if (request()->has('type') && request('type') =='firma')
-        {
-                
+        // CASO A: Subida de Firma de Usuario
+        if ($request->has('type') && $request->type == 'firma') {
             $user = User::find($request->id);
-            $nombreArchivo = '';
             if ($request->hasFile('firma')) {
-                $file = $request->file('firma') ;
-                $nombreArchivo = trim($this->getGUID(), '{}') . '.jpg';
-                Storage::disk('azure')->putFileAs('/' , $file, $nombreArchivo);
-                $user->firma =  $nombreArchivo;
-                $user->update(['firma' => $nombreArchivo ]);
+                $file = $request->file('firma');
+                $nombreArchivo = $this->getGUID() . '.jpg';
                 
+                // Guardamos en carpeta 'firmas' dentro de Azure
+                Storage::disk('azure')->putFileAs('firmas', $file, $nombreArchivo);
+                
+                $user->update(['firma' => $nombreArchivo]);
             }       
-            return back()->with('info', 'Documentos cargados correctamente.');
-        }
+            return back()->with('info', 'Firma cargada correctamente.');
+        } 
+        
+        // CASO B: Subida de archivos de Investigación (desde el formulario que vimos)
         else {
-            $investigacion = Investigaciones::find($request->id);
-            $consecutivo = 1;
-            foreach ($request->file('files') as $file) {
-                $nombreArchivo = $file->getClientOriginalName();
-                $extension = $file->getClientOriginalExtension();
-                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/investigacion', $file, $nombreArchivo);
-                $consecutivo++;
+            $investigacion = Investigaciones::findOrFail($request->id);
+            
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $nombreArchivo = $file->getClientOriginalName();
+                    
+                    // RUTA UNIFICADA: investigaciones/radicado/CARPETA
+                    // Quitamos el '/investigacion' extra para que el visor lo encuentre directo
+                    $rutaDestino = 'investigaciones/radicado/' . $investigacion->nombreCarpeta;
+
+                    Storage::disk('azure')->putFileAs($rutaDestino, $file, $nombreArchivo);
+                }
             }
         }
         return back()->with('info', 'Documentos cargados correctamente.');
     }
 
+    /**
+     * Subida de Soportes Fotográficos (Categorizados)
+     */
     public function DocumentosAnexosStore(Request $request)
     {
-        //$investigacion = Investigaciones::where('NumeroRadicacionCaso', $request->id)->first();
-        $investigacion = Investigaciones::find($request->id);
-        $num_total = count(Storage::disk('azure')->allFiles('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico'));
-        $consecutivo = $num_total;
+        $investigacion = Investigaciones::findOrFail($request->id);
+        
+        // Definimos la carpeta base de soportes para esta investigación
+        $rutaBaseSoportes = 'investigaciones/radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico';
+        
+        // Obtenemos el conteo actual para no sobrescribir nombres
+        $num_total = count(Storage::disk('azure')->allFiles($rutaBaseSoportes));
 
-        if ($request->hasFile('inmuebles') && $request->file('inmuebles') !== null) {
-            foreach ($request->file('inmuebles') as $file) {
-                $extension = $file->getClientOriginalExtension();
-                $nombreArchivo = 'inmueble_' . ++$num_total . '.' . $extension;
-                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
-                $consecutivo++;
+        // Mapeo de inputs del formulario vs prefijo de archivo
+        $categorias = [
+            'inmuebles'    => 'inmueble_',
+            'servicios'    => 'servicios_',
+            'pertenencias' => 'pertenencias_',
+            'clinica'      => 'clinica_',
+            'familiares'   => 'familiares_',
+            'investigador' => 'investigador_',
+            'basesdedatos' => 'basesdedatos_',
+        ];
+
+        foreach ($categorias as $input => $prefijo) {
+            if ($request->hasFile($input)) {
+                foreach ($request->file($input) as $file) {
+                    $extension = $file->getClientOriginalExtension();
+                    $nombreArchivo = $prefijo . (++$num_total) . '.' . $extension;
+                    
+                    Storage::disk('azure')->putFileAs($rutaBaseSoportes, $file, $nombreArchivo);
+                }
             }
         }
 
-        if ($request->hasFile('servicios') && $request->file('servicios') !== null) {
-            foreach ($request->file('servicios') as $file) {
-                $extension = $file->getClientOriginalExtension();
-                $nombreArchivo = 'servicios_' . ++$num_total . '.' . $extension;
-                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
-                $consecutivo++;
-            }
-        }
-
-        if ($request->hasFile('pertenencias') && $request->file('pertenencias') !== null) {
-            foreach ($request->file('pertenencias') as $file) {
-                $extension = $file->getClientOriginalExtension();
-                $nombreArchivo = 'pertenencias_' . ++$num_total . '.' . $extension;
-                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
-                $consecutivo++;
-            }
-        }
-
-        if ($request->hasFile('clinica') && $request->file('clinica') !== null) {
-            foreach ($request->file('clinica') as $file) {
-                $extension = $file->getClientOriginalExtension();
-                $nombreArchivo = 'clinica_' . ++$num_total . '.' . $extension;
-                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
-                $consecutivo++;
-            }
-        }
-
-        if ($request->hasFile('familiares') && $request->file('familiares') !== null) {
-            foreach ($request->file('familiares') as $file) {
-                $extension = $file->getClientOriginalExtension();
-                $nombreArchivo = 'familiares_' . ++$num_total . '.' . $extension;
-                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
-                $consecutivo++;
-            }
-        }
-
-        if ($request->hasFile('investigador') && $request->file('investigador') !== null) {
-            foreach ($request->file('investigador') as $file) {
-                $extension = $file->getClientOriginalExtension();
-                $nombreArchivo = 'investigador_' . ++$num_total . '.' . $extension;
-                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
-                $consecutivo++;
-            }
-        }
-
-        if ($request->hasFile('basesdedatos') && $request->file('basesdedatos') !== null) {
-            foreach ($request->file('basesdedatos') as $file) {
-                $extension = $file->getClientOriginalExtension();
-                $nombreArchivo = 'basesdedatos_' . ++$num_total . '.' . $extension;
-                Storage::disk('azure')->putFileAs('radicado/' . $investigacion->nombreCarpeta . '/soporteFotografico', $file, $nombreArchivo);
-                $consecutivo++;
-            }
-        }
-        return back()->with('info', 'Documentos cargados correctamente.');
-    }
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Documentos $documentos)
-    {
-        //
+        return back()->with('info', 'Soportes fotográficos cargados correctamente.');
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Documentos $documentos)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Documentos $documentos)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
+     * Eliminación de archivos en Azure
      */
     public function eliminarSoporte(Request $request)
     {
-        $rutaArchivo = $request->input('ruta_archivo');
+        $rutaArchivo = $request->input('ruta_archivo'); // Debe ser la ruta completa en el contenedor
+        
         try {
             if (Storage::disk('azure')->exists($rutaArchivo)) {
-                $deleted = Storage::disk('azure')->delete($rutaArchivo);
-
-                if ($deleted) {
-                    return redirect()->back()->with('success', 'El archivo ha sido eliminado correctamente');
-                } else {
-                    return redirect()->back()->with('success', 'El archivo no ha sido eliminado');
-                }
-            } else {
-                return redirect()->back()->with('success', 'El archivo ha sido eliminado correctamente');
+                Storage::disk('azure')->delete($rutaArchivo);
+                return redirect()->back()->with('success', 'Archivo eliminado correctamente.');
             }
+            return redirect()->back()->with('error', 'El archivo no existe en el servidor.');
         } catch (Exception $e) {
-            // Registra el error y devuelve una respuesta adecuada
-            Log::error('Error al eliminar el archivo: ' . $e->getMessage());
-            return redirect()->back()->with('success', 'El archivo no ha sido eliminado correctamente');
+            Log::error('Error al eliminar en Azure: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'No se pudo eliminar el archivo.');
         }
-
-        // Redirigir o hacer cualquier otra cosa después de eliminar el archivo
-        return redirect()->back()->with('success', 'El archivo ha sido eliminado correctamente');
     }
+
+    /**
+     * VISOR DE PDF (Optimizado con cURL para Azure App Service)
+     */
     public function ver($carpeta, $archivo)
     {
-        // DEBUG 1: ¿Entra al controlador?
-        // Si ves esto en pantalla, la ruta en web.php está BIEN.
-        // Si sigues viendo el 404 de Laravel, la ruta en web.php está MAL.
-        // dd("Entró al controlador", "Carpeta: $carpeta", "Archivo: $archivo");
-
         $ruta = "investigaciones/radicado/{$carpeta}/{$archivo}";
-
         $azureService = new \App\Services\AzureBlobService();
         $urlTemporal = $azureService->generarUrlTemporal($ruta);
 
-        // DEBUG 2: ¿La URL de Azure es válida?
-        // Copia y pega lo que salga aquí en una pestaña nueva. 
-        // Si abre el PDF, el problema es el fopen/stream.
-        // dd($urlTemporal);
-
-        $extension = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));
-        $tipos = [
-            'pdf'  => 'application/pdf',
-            'png'  => 'image/png',
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-        ];
-        $contentType = $tipos[$extension] ?? 'application/octet-stream';
-
         return response()->stream(function () use ($urlTemporal) {
-            $opts = ["http" => ["method" => "GET"]];
-            $context = stream_context_create($opts);
-            $file = @fopen($urlTemporal, 'rb', false, $context);
+            if (ob_get_level()) ob_end_clean();
             
-            if (!$file) {
-                // DEBUG 3: Si llega aquí pero no abre el archivo
-                exit("Error: No se pudo abrir el stream de Azure. Revisa allow_url_fopen en php.ini");
-            }
-
-            while (!feof($file)) {
-                echo fread($file, 1024 * 8);
+            $ch = curl_init($urlTemporal);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_BUFFERSIZE, 1024 * 8);
+            curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch, $data) {
+                echo $data;
                 flush();
-            }
-            fclose($file);
+                return strlen($data);
+            });
+            curl_exec($ch);
+            curl_close($ch);
         }, 200, [
-            'Content-Type' => $contentType,
+            'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $archivo . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
     }
 }
