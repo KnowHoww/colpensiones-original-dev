@@ -206,27 +206,35 @@ class DocumentosController extends Controller
     }
     public function ver($carpeta, $archivo)
     {
-        // 1. Limpiamos la ruta para que no tenga dobles slashes
         $ruta = "investigaciones/radicado/{$carpeta}/{$archivo}";
-        
         $azureService = new \App\Services\AzureBlobService();
         $urlTemporal = $azureService->generarUrlTemporal($ruta);
 
-        // DEBUG TEMPORAL: Si quieres ver si la URL está bien formada en Azure
-        return $urlTemporal; 
-
+        // Quitamos el debug para que ejecute el stream
         return response()->stream(function () use ($urlTemporal) {
-            // Usamos cURL que es más estable en Azure App Service que fopen
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $urlTemporal);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+            // Limpiamos los buffers de salida de PHP para streaming real
+            if (ob_get_level()) ob_end_clean();
+
+            $ch = curl_init($urlTemporal);
+            curl_setopt($ch, CURLOPT_HEADER, false);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Importante en entornos Azure
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+            curl_setopt($ch, CURLOPT_BUFFERSIZE, 1024 * 8); // Bloques de 8KB
+            
+            // Esta función hace que cada bloque recibido de Azure se envíe al navegador inmediatamente
+            curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch, $data) {
+                echo $data;
+                flush(); 
+                return strlen($data);
+            });
+
             curl_exec($ch);
             curl_close($ch);
         }, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$archivo.'"',
+            'Content-Disposition' => 'inline; filename="' . $archivo . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
         ]);
     }
 }
