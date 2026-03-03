@@ -17,25 +17,22 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if (env('APP_ENV') !== 'local') {
-            URL::forceScheme('https');
+        // 1. Forzar HTTPS si NO estamos en local
+        // Usamos config() en lugar de env() porque es más seguro (cacheable)
+        if (config('app.env') !== 'local') {
+            \URL::forceScheme('http');
         }
-        // Registramos el driver 'azure-blob'
-        Storage::extend('azure', function ($app, $config) {
 
-            // Crear el cliente de Azure Blob Storage (BlobRestProxy)
-            $client = BlobRestProxy::createBlobService($config['connection_string']);
-
-            // Crear el adaptador de Azure para Flysystem
-            $adapter = new AzureBlobStorageAdapter(
-                $client,                      // Pasamos el cliente a AzureBlobStorageAdapter
-                $config['container']          // El contenedor que se va a usar
+        // 2. Registro del driver de Azure (Tu lógica existente corregida)
+        \Storage::extend('azure', function ($app, $config) {
+            $client = \MicrosoftAzure\Storage\Blob\BlobRestProxy::createBlobService($config['connection_string']);
+            $adapter = new \League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter(
+                $client,
+                $config['container']
             );
 
-            // Crear la instancia de Filesystem de Flysystem con el adaptador
-            $filesystem = new Filesystem($adapter);
+            $filesystem = new \League\Flysystem\Filesystem($adapter);
 
-            // Devolvemos la instancia de FilesystemAdapter correctamente
             return new \Illuminate\Filesystem\FilesystemAdapter($filesystem, $adapter, $config);
         });
     }

@@ -243,7 +243,7 @@ Route::group(['middleware' => 'checkRules'], function () {
     Route::get('/CumplidoTodo/', [NotificacionesController::class, 'CumplidoTodo'])->name('CumplidoTodo')->middleware(['auth']);
       
 
-
+Route::post('/documentos/store', [DocumentosController::class, 'store'])->name('documentos.store');
     
     Route::get('/generarDocumentacion', function () {
         return view('generarDocumentacion.generarDocumentacion');
