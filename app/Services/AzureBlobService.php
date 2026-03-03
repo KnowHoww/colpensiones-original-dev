@@ -23,9 +23,6 @@ class AzureBlobService
             $this->accountName,
             $this->accountKey
         );
-
-        // IMPORTANTE: Si la ruta ya viene con %20, rawurldecode la limpia 
-        // y rawurlencode la vuelve a poner bien una sola vez.
         $limpia = rawurldecode($rutaArchivo);
         
         $rutaEncodeada = collect(explode('/', $limpia))

@@ -17,13 +17,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // 1. Forzar HTTPS si NO estamos en local
-        // Usamos config() en lugar de env() porque es más seguro (cacheable)
         if (config('app.env') !== 'local') {
-            \URL::forceScheme('http');
+            \URL::forceScheme('https');
         }
-
-        // 2. Registro del driver de Azure (Tu lógica existente corregida)
         \Storage::extend('azure', function ($app, $config) {
             $client = \MicrosoftAzure\Storage\Blob\BlobRestProxy::createBlobService($config['connection_string']);
             $adapter = new \League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter(
