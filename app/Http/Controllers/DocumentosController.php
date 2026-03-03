@@ -206,49 +206,27 @@ class DocumentosController extends Controller
     }
     public function ver($carpeta, $archivo)
     {
-        // DEBUG 1: ¿Entra al controlador?
-        // Si ves esto en pantalla, la ruta en web.php está BIEN.
-        // Si sigues viendo el 404 de Laravel, la ruta en web.php está MAL.
-        // dd("Entró al controlador", "Carpeta: $carpeta", "Archivo: $archivo");
-
+        // 1. Limpiamos la ruta para que no tenga dobles slashes
         $ruta = "investigaciones/radicado/{$carpeta}/{$archivo}";
-
+        
         $azureService = new \App\Services\AzureBlobService();
-        #$urlTemporal = $azureService->generarUrlTemporal($ruta);
-        $urlTemporal = $azureService->generarUrlTemporal($path);
+        $urlTemporal = $azureService->generarUrlTemporal($ruta);
 
-        // DEBUG 2: ¿La URL de Azure es válida?
-        // Copia y pega lo que salga aquí en una pestaña nueva. 
-        // Si abre el PDF, el problema es el fopen/stream.
-        // dd($urlTemporal);
-
-        $extension = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));
-        $tipos = [
-            'pdf'  => 'application/pdf',
-            'png'  => 'image/png',
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-        ];
-        $contentType = $tipos[$extension] ?? 'application/octet-stream';
+        // DEBUG TEMPORAL: Si quieres ver si la URL está bien formada en Azure
+        return $urlTemporal; 
 
         return response()->stream(function () use ($urlTemporal) {
-            $opts = ["http" => ["method" => "GET"]];
-            $context = stream_context_create($opts);
-            $file = @fopen($urlTemporal, 'rb', false, $context);
-            
-            if (!$file) {
-                // DEBUG 3: Si llega aquí pero no abre el archivo
-                exit("Error: No se pudo abrir el stream de Azure. Revisa allow_url_fopen en php.ini");
-            }
-
-            while (!feof($file)) {
-                echo fread($file, 1024 * 8);
-                flush();
-            }
-            fclose($file);
+            // Usamos cURL que es más estable en Azure App Service que fopen
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $urlTemporal);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Importante en entornos Azure
+            curl_exec($ch);
+            curl_close($ch);
         }, 200, [
-            'Content-Type' => $contentType,
-            'Content-Disposition' => 'inline; filename="' . $archivo . '"',
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$archivo.'"',
         ]);
     }
 }
