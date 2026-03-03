@@ -135,6 +135,22 @@ class DocumentosController extends Controller
         $azureService = new \App\Services\AzureBlobService();
         $urlTemporal = $azureService->generarUrlTemporal($ruta);
 
+        // 1. Detectar la extensión y asignar el Content-Type correcto
+        $extension = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));
+        
+        $tiposMime = [
+            'pdf'  => 'application/pdf',
+            'png'  => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+            'txt'  => 'text/plain',
+        ];
+
+        // Si la extensión no está en la lista, usamos un tipo genérico de descarga
+        $contentType = $tiposMime[$extension] ?? 'application/octet-stream';
+
         return response()->stream(function () use ($urlTemporal) {
             if (ob_get_level()) ob_end_clean();
             
@@ -151,7 +167,7 @@ class DocumentosController extends Controller
             curl_exec($ch);
             curl_close($ch);
         }, 200, [
-            'Content-Type' => 'application/pdf',
+            'Content-Type' => $contentType,
             'Content-Disposition' => 'inline; filename="' . $archivo . '"',
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
